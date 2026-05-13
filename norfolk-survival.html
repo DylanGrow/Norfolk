@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1b2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Norfolk Survival Kit</title>
+<style>
+  :root {
+    --navy:       #0d1b2a;
+    --navy-mid:   #132130;
+    --navy-lite:  #1e3550;
+    --slate:      #3a5570;
+    --slate-lite: #6a8fa8;
+    --fog:        #a8c4d4;
+    --white:      #ddeaf2;
+    --amber:      #e8a020;
+    --amber-dim:  #9a6010;
+    --green:      #3db870;
+    --red:        #cc4444;
+    --card-bg:    #101e2d;
+    --border:     #1a3048;
+    --text:       #b8d0e0;
+    --subtext:    #5a7a90;
+    --mono:       'Courier New', Courier, monospace;
+    --serif:      Georgia, 'Times New Roman', serif;
+    --r:          10px;
+    --t:          0.16s ease;
+  }
+
+  .night {
+    --navy:      #05080c;
+    --navy-mid:  #090e14;
+    --navy-lite: #0e1820;
+    --card-bg:   #070b10;
+    --border:    #101820;
+    --text:      #b03008;
+    --subtext:   #6a2808;
+    --fog:       #6a2808;
+    --white:     #c04010;
+    --amber:     #c03808;
+    --amber-dim: #801800;
+    --slate-lite:#5a2008;
+    --green:     #903008;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--serif);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--navy);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px 10px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+  }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .eyebrow { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--subtext); margin-bottom: 3px; }
+  h1 { font-size: 20px; font-weight: normal; color: var(--white); letter-spacing: 0.06em; line-height: 1.15; }
+  h1 em { color: var(--amber); font-style: normal; }
+  .hdr-controls { display: flex; gap: 8px; align-items: center; padding-top: 2px; }
+  .icon-btn {
+    background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--subtext); cursor: pointer; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+    transition: background var(--t), color var(--t), border-color var(--t); flex-shrink: 0; user-select: none;
+  }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn.on, .icon-btn:hover { background: var(--navy-lite); color: var(--amber); border-color: var(--amber-dim); }
+
+  /* PROGRESS */
+  .prog-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .prog-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--subtext); }
+  .prog-pct { font-family: var(--mono); font-size: 14px; font-weight: bold; color: var(--amber); transition: color var(--t); }
+  .prog-track { height: 4px; background: var(--navy-lite); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; background: linear-gradient(90deg, var(--amber-dim), var(--amber)); border-radius: 99px; width: 0%; transition: width 0.45s cubic-bezier(.22,.68,0,1.15); }
+  .prog-fill.done { background: linear-gradient(90deg, #1a8048, var(--green)); }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 6px; padding: 10px 16px 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .pill {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border);
+    background: transparent; color: var(--subtext); cursor: pointer; white-space: nowrap;
+    transition: background var(--t), color var(--t), border-color var(--t); flex-shrink: 0;
+  }
+  .pill.active { background: var(--navy-lite); border-color: var(--amber-dim); color: var(--amber); }
+
+  /* MAIN */
+  main { padding: 14px 12px 110px; max-width: 560px; margin: 0 auto; }
+
+  /* COMPLETE BANNER */
+  .all-done { display: none; align-items: center; gap: 10px; background: rgba(61,184,112,0.08); border: 1px solid rgba(61,184,112,0.25); border-radius: var(--r); padding: 12px 16px; margin-bottom: 14px; }
+  .all-done.show { display: flex; }
+  .all-done span { font-size: 22px; }
+  .all-done p { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); }
+
+  /* SECTION CARDS */
+  .section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 14px; overflow: hidden; }
+  .sec-hdr { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; transition: background var(--t); }
+  .sec-hdr:active { background: var(--navy-lite); }
+  .sec-icon { font-size: 18px; flex-shrink: 0; }
+  .sec-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--fog); flex: 1; }
+  .sec-badge { font-family: var(--mono); font-size: 9px; padding: 3px 9px; border-radius: 99px; background: var(--navy-lite); color: var(--subtext); transition: background var(--t), color var(--t); white-space: nowrap; }
+  .sec-badge.full { background: rgba(61,184,112,0.14); color: var(--green); }
+  .sec-chev { font-size: 10px; color: var(--subtext); transition: transform 0.2s ease; flex-shrink: 0; }
+  .section.collapsed .sec-chev { transform: rotate(-90deg); }
+  .sec-body { max-height: 9999px; transition: max-height 0.3s ease; overflow: hidden; }
+  .section.collapsed .sec-body { max-height: 0; }
+
+  /* ITEMS */
+  .item { display: flex; align-items: center; gap: 13px; padding: 13px 14px; border-bottom: 1px solid var(--border); cursor: pointer; min-height: 54px; transition: background var(--t); }
+  .item:last-child { border-bottom: none; }
+  .item:active { background: rgba(255,255,255,0.03); }
+  .item.checked { opacity: 0.45; }
+  .cb { width: 26px; height: 26px; border: 2px solid var(--slate); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background var(--t), border-color var(--t); }
+  .item.checked .cb { background: var(--green); border-color: var(--green); }
+  .ck { opacity: 0; transform: scale(0.3) rotate(-15deg); transition: opacity 0.14s ease, transform 0.2s cubic-bezier(.22,.68,0,1.5); color: #fff; font-size: 13px; line-height: 1; font-weight: bold; }
+  .item.checked .ck { opacity: 1; transform: scale(1) rotate(0deg); }
+  .item-text { font-size: 15px; color: var(--text); line-height: 1.35; flex: 1; transition: color var(--t); }
+  .item.checked .item-text { text-decoration: line-through; color: var(--subtext); }
+
+  /* FOOTER */
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 16px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--navy) 38%); display: flex; justify-content: center; pointer-events: none; }
+  .reset-btn { pointer-events: all; background: transparent; border: 1px solid var(--slate); border-radius: 8px; color: var(--subtext); font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 11px 32px; cursor: pointer; transition: background var(--t), color var(--t), border-color var(--t); }
+  .reset-btn:hover, .reset-btn:active { background: rgba(204,68,68,0.1); border-color: var(--red); color: var(--red); }
+
+  /* MODAL */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; backdrop-filter: blur(5px); }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .modal { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 14px; padding: 28px 22px 20px; max-width: 310px; width: 100%; text-align: center; transform: scale(0.88) translateY(24px); transition: transform 0.28s cubic-bezier(.22,.68,0,1.2); box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
+  .overlay.show .modal { transform: scale(1) translateY(0); }
+  .modal-ico { font-size: 38px; margin-bottom: 10px; }
+  .modal h2 { font-size: 19px; font-weight: normal; color: var(--white); margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--subtext); line-height: 1.55; margin-bottom: 22px; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button { flex: 1; padding: 13px 8px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; transition: opacity var(--t), transform var(--t); }
+  .modal-btns button:active { transform: scale(0.95); }
+  .btn-cancel { background: var(--navy-lite); color: var(--subtext); }
+  .btn-confirm { background: var(--red); color: #fff; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--navy-lite); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <div class="eyebrow">Norfolk Naval Shipyard · 10-Week Deployment</div>
+      <h1>Survival <em>Manifest</em></h1>
+    </div>
+    <div class="hdr-controls">
+      <button class="icon-btn" id="nightBtn" aria-label="Night mode">🌙</button>
+    </div>
+  </div>
+  <div>
+    <div class="prog-meta">
+      <span class="prog-label">Packed &amp; Stowed</span>
+      <span class="prog-pct" id="pct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="fill"></div></div>
+  </div>
+</header>
+
+<div class="filter-bar" id="filterBar"></div>
+
+<main>
+  <div class="all-done" id="allDone">
+    <span>⚓</span>
+    <p>All hands ready — cleared to depart Norfolk.</p>
+  </div>
+  <div id="list"></div>
+</main>
+
+<div class="footer">
+  <button class="reset-btn" id="resetBtn">⟳ &nbsp;Reset Manifest</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-ico">⚠️</div>
+    <h2>Clear the Manifest?</h2>
+    <p>All checked items will be reset. Your 10-week kit goes back to zero. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="cancelBtn">Belay That</button>
+      <button class="btn-confirm" id="confirmBtn">Confirm Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const SECTIONS = [
+    {
+      id: 'grooming', icon: '🪒', title: 'Grooming & Hygiene',
+      items: [
+        'Spare Prescription Glasses',
+        'Rechargeable Razor + Charger',
+        'Fingernail Clippers',
+        'Hair Ties',
+        'Microfiber Travel Towel',
+        'Solid Deodorant / Body Wash',
+        'Body Powder',
+        'Rubber Flip-flops',
+        'Toothbrush + Toothpaste',
+        'Dental Floss / Floss Picks',
+        'Travel Mouthwash',
+        'Solid Shampoo Bar (no spill)',
+        'Tweezers',
+        'Cotton Swabs (Q-tips)',
+        'Lip Balm (SPF)',
+        'Sunscreen Stick',
+        'Hand Sanitizer (large bottle)',
+        'Unscented Body Wipes',
+        'Foot Powder / Blister Prevention Stick',
+        'Spare Contact Lenses + Solution',
+      ]
+    },
+    {
+      id: 'power', icon: '⚡', title: 'Power & Climate',
+      items: [
+        '2× Solar Jackerys + Folding Panels',
+        'Large Rechargeable Fan',
+        'Small USB Backup Fan',
+        'Fast-Charge Wall Brick + 10ft Cables',
+        'Pocket Solar Trickle Charger',
+        '12V Portable Car Cooler / Mini Fridge',
+        '12V Car Kettle / Immersion Heater',
+        'Reflectix Insulation Panels (cut to all windows)',
+        'Cooling Towel × 2',
+        'Freeze Packs × 4',
+      ]
+    },
+    {
+      id: 'uniform', icon: '👕', title: 'Crew Uniform',
+      items: [
+        '7 Pairs Socks',
+        '7 Pairs Underwear',
+        '5–7 Shirts',
+        '2 Pairs Pants',
+        '1 Light Hoodie',
+        'Mesh Laundry Bag',
+        'Rain Poncho (compact, packs to fist-size)',
+        'Compression Socks — 3 pairs (long shifts)',
+        'Thermal Base Layer Top',
+        'Thermal Base Layer Bottoms',
+        'Beanie / Watch Cap (cold nights)',
+        'Polarized Sunglasses (glare off water & steel)',
+        'Bandana / Shemagh (sweat, dust, sun)',
+        'Small Daypack / Sling Bag (daily carry)',
+      ]
+    },
+    {
+      id: 'berthing', icon: '🛏️', title: 'Berthing',
+      items: [
+        'Thin Fleece Blanket / Woobie',
+        '2 Pillows',
+        'Folding Electric Scooter + Charger',
+        'Padlock',
+        'DampRid Tub',
+        'Headlamp with Red Light Mode',
+        'Sleep Mask / Blackout Eye Cover',
+        'Melatonin Gummies',
+        'Sleeping Bag Liner (silk or fleece)',
+        'Emergency Mylar Thermal Blanket',
+        'Portable Clothesline + 8 Mini Clips',
+        'Hanging Mesh Organizer (headrest hooks)',
+        'Seat Gap Organizer / Console Caddy',
+        'Lumbar Support Cushion',
+        'Bungee Cargo Net (trunk organizer)',
+      ]
+    },
+    {
+      id: 'galley', icon: '🍲', title: 'Galley Stores',
+      items: [
+        'Insulated Thermos / Travel Mug',
+        'Collapsible Silicone Bowl + Lid',
+        'Collapsible Silicone Cup',
+        'Instant Ramen Bricks',
+        'Beef Jerky / Meat Sticks (bulk)',
+        'Electrolyte Packets (Liquid I.V. or LMNT)',
+        'Honey Packets (single-serve)',
+        'Instant Mashed Potato Packets',
+        'Hard Candy / Glucose Tabs (energy)',
+        'Spice Kit (salt, pepper, garlic in small tins)',
+        'Insulated Lunch Bag / Soft Cooler',
+        'Spork + Folding Knife',
+        'Manual Can Opener',
+        'Protein Bars (2-week supply)',
+        'Instant Oatmeal Packets',
+        'Instant Coffee / Single-Serve Packets',
+        'Small Jar of Peanut Butter',
+        'Mixed Nuts / Trail Mix',
+        'Paper Towels (half roll)',
+        'Gallon Zip-Lock Bags (various sizes)',
+        'Stackable Meal Prep Containers × 4',
+        'Reusable Ice Packs × 4',
+      ]
+    },
+    {
+      id: 'nav', icon: '🧭', title: 'Navigation & Comms',
+      items: [
+        'Offline Maps Downloaded to Phone (Google Maps)',
+        'Backup Burner Phone + SIM',
+        'Portable AM/FM Weather Radio',
+        'Waterproof Notepad + Pencil',
+        'Laminated Area Map (no-battery backup)',
+      ]
+    },
+    {
+      id: 'bosun', icon: '🪢', title: "Bosun's Locker",
+      items: [
+        'Paracord — 50ft',
+        'Bungee Cords (assorted, 12-pack)',
+        'Zip Ties — 100-count bag',
+        'Duct Tape (full roll)',
+        'Carabiner Clips (6-pack)',
+        'Sharpie Markers (3-pack)',
+        'Velcro Cable Ties / Organizers',
+        'Waterproof Dry Bag (10L)',
+        'Clip-on Work Light (USB rechargeable)',
+        'Small Folding Tarp',
+        'Multi-tool (Leatherman or equivalent)',
+        'Gallon-sized Trash Bags',
+      ]
+    },
+    {
+      id: 'doc', icon: '🩺', title: "Ship's Doc",
+      items: [
+        'Ibuprofen + Acetaminophen',
+        'Prescription Medications (full 10-week supply)',
+        'Antacids (Tums / Pepto Tablets)',
+        'Allergy Medicine (Claritin or generic)',
+        'Saline Eye Drops',
+        'Blister Bandages (Compeed)',
+        'Basic First Aid Kit (compact)',
+        'Antibiotic Ointment (Neosporin)',
+        'Athletic / KT Tape',
+        'Multivitamins (70-day supply)',
+        'Vitamin D3 + Magnesium',
+        'Anti-diarrheal Tablets (Imodium)',
+        'Cold & Flu Medicine (DayQuil / NyQuil)',
+        'Ace Bandage / Elastic Wrap',
+        'Moleskin Sheet (custom blister cuts)',
+        'Saline Nasal Spray (shipyard air is brutal)',
+      ]
+    },
+    {
+      id: 'yard', icon: '⚙️', title: 'Shipyard Gear',
+      items: [
+        'Steel-Toed Work Boots',
+        'Work Gloves (2 pairs)',
+        'Safety Glasses / Clear Goggles',
+        'Foam Earplugs (bulk box)',
+        'High-Visibility Vest',
+        'Pocket Notebook + 3 Pens',
+        'Badge / ID Lanyard with Breakaway Clip',
+        'Work Boot Insoles (gel comfort)',
+      ]
+    },
+    {
+      id: 'eng', icon: '🚗', title: 'Engineering & Security',
+      items: [
+        'Reflective Windshield Sunshade',
+        'Magnetic Window Blackout Panels',
+        'Steering Wheel Club Lock',
+        'Emergency Escape Tool (seatbelt cutter + window breaker)',
+        'Roadside Emergency Kit (triangles, gloves, poncho)',
+        'Tire Pressure Gauge — Digital',
+        'Fix-a-Flat Emergency Sealant',
+        '1 Quart Motor Oil (correct Saab grade)',
+        'Jumper Cables / Compact Lithium Jump Starter',
+        'Small Funnel + Rags',
+        'Small Lockbox / Combination Safe',
+        'Waterproof Document Folder (registration, insurance, ID)',
+        'Laminated Emergency Contact Card (wallet)',
+      ]
+    },
+    {
+      id: 'heat', icon: '🌡️', title: 'Heat & Humidity Ops',
+      items: [
+        'Anti-chafing Balm (Body Glide — Norfolk humidity is no joke)',
+        'Aloe Vera Gel (heat rash, water-glare sunburn)',
+        'Silica Gel Desiccant Packs (bulk bag — kill mold early)',
+        'DEET Wipe Packets (Hampton Roads mosquitoes are vicious)',
+        'Magnetic Mesh Window Screens (sleep with windows cracked)',
+        'Compact Umbrella (afternoon storms hit fast)',
+        'Waterproof Overshoes / Boot Covers (shipyard puddles)',
+      ]
+    },
+    {
+      id: 'shore', icon: '🚿', title: 'Shore Leave',
+      items: [
+        'Planet Fitness Membership Card (24-hr shower access)',
+        'Dedicated Wet/Dry Shower Bag',
+        'Extra Combination Lock for Gym Locker',
+        'Waterproof Shower Speaker (morale)',
+        'Portable Solar Shower Bag — 5 gallon (off-gym backup)',
+        'Scrubba Portable Wash Bag (hand-wash in a bag)',
+        'Laundry Detergent Sheets (no liquid, no mess)',
+        'Stain Remover Pen — Tide to Go (work clothes)',
+        'Dryer Sheets × Box (also deodorizes the car)',
+      ]
+    },
+    {
+      id: 'morale', icon: '🎯', title: 'Crew Morale',
+      items: [
+        'Norfolk Public Library Card (free WiFi + AC + a real chair)',
+        'Waterproof Playing Cards',
+        "Small Ship's Log / Journal",
+        'Backup Bluetooth Earbuds',
+      ]
+    },
+  ];
+
+  const SK = 'norfolk_v3_checked';
+  const NK = 'norfolk_v3_night';
+  const CK = 'norfolk_v3_collapsed';
+
+  let checked     = load(SK, {});
+  let nightMode   = localStorage.getItem(NK) === '1';
+  let collapsed   = load(CK, {});
+  let activeFilter = 'all';
+
+  function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; } }
+  function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  function ikey(sid, idx) { return sid + '_' + idx; }
+
+  // Night mode
+  const nightBtn = document.getElementById('nightBtn');
+  function applyNight() {
+    document.body.classList.toggle('night', nightMode);
+    nightBtn.textContent = nightMode ? '☀️' : '🌙';
+    nightBtn.classList.toggle('on', nightMode);
+  }
+  applyNight();
+  nightBtn.addEventListener('click', () => {
+    nightMode = !nightMode;
+    localStorage.setItem(NK, nightMode ? '1' : '0');
+    applyNight();
+  });
+
+  // Filter bar
+  function buildFilters() {
+    const bar = document.getElementById('filterBar');
+    bar.innerHTML = '';
+    [{ id: 'all', icon: '⚓', title: 'All Sections' }, ...SECTIONS].forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'pill' + (activeFilter === s.id ? ' active' : '');
+      btn.textContent = s.icon + ' ' + s.title;
+      btn.addEventListener('click', () => {
+        activeFilter = s.id;
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+        if (s.id !== 'all') {
+          const el = document.querySelector('.section[data-id="' + s.id + '"]');
+          if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+        }
+      });
+      bar.appendChild(btn);
+    });
+  }
+
+  // Progress
+  function totalItems() { return SECTIONS.reduce((n, s) => n + s.items.length, 0); }
+  function totalDone()  { return Object.values(checked).filter(Boolean).length; }
+
+  function updateProgress() {
+    const pct = Math.round((totalDone() / totalItems()) * 100);
+    document.getElementById('pct').textContent = pct + '%';
+    const fill = document.getElementById('fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('done', pct === 100);
+    document.getElementById('allDone').classList.toggle('show', pct === 100);
+  }
+
+  // Render
+  function render() {
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+
+    const toShow = activeFilter === 'all' ? SECTIONS : SECTIONS.filter(s => s.id === activeFilter);
+
+    toShow.forEach(sec => {
+      const done  = sec.items.filter((_, i) => checked[ikey(sec.id, i)]).length;
+      const total = sec.items.length;
+      const isCol = !!collapsed[sec.id];
+
+      const wrap = document.createElement('div');
+      wrap.className = 'section' + (isCol ? ' collapsed' : '');
+      wrap.dataset.id = sec.id;
+
+      const hdr = document.createElement('div');
+      hdr.className = 'sec-hdr';
+      hdr.innerHTML =
+        '<div class="sec-icon">' + sec.icon + '</div>' +
+        '<div class="sec-title">' + sec.title + '</div>' +
+        '<div class="sec-badge' + (done === total ? ' full' : '') + '">' + done + '/' + total + '</div>' +
+        '<div class="sec-chev">&#9662;</div>';
+      hdr.addEventListener('click', () => {
+        collapsed[sec.id] = !collapsed[sec.id];
+        save(CK, collapsed);
+        wrap.classList.toggle('collapsed');
+      });
+
+      const body = document.createElement('div');
+      body.className = 'sec-body';
+
+      sec.items.forEach((label, idx) => {
+        const key = ikey(sec.id, idx);
+        const isChk = !!checked[key];
+        const row = document.createElement('div');
+        row.className = 'item' + (isChk ? ' checked' : '');
+        row.innerHTML =
+          '<div class="cb"><span class="ck">&#10003;</span></div>' +
+          '<div class="item-text">' + label + '</div>';
+        row.addEventListener('click', () => {
+          checked[key] = !checked[key];
+          save(SK, checked);
+          row.classList.toggle('checked', checked[key]);
+          const badge = wrap.querySelector('.sec-badge');
+          const d = sec.items.filter((_, i) => checked[ikey(sec.id, i)]).length;
+          badge.textContent = d + '/' + sec.items.length;
+          badge.classList.toggle('full', d === sec.items.length);
+          updateProgress();
+        });
+        body.appendChild(row);
+      });
+
+      wrap.appendChild(hdr);
+      wrap.appendChild(body);
+      list.appendChild(wrap);
+    });
+
+    updateProgress();
+  }
+
+  // Reset
+  const overlay    = document.getElementById('overlay');
+  const resetBtn   = document.getElementById('resetBtn');
+  const cancelBtn  = document.getElementById('cancelBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
+  resetBtn.addEventListener('click',  () => overlay.classList.add('show'));
+  cancelBtn.addEventListener('click', () => overlay.classList.remove('show'));
+  overlay.addEventListener('click',   e => { if (e.target === overlay) overlay.classList.remove('show'); });
+  confirmBtn.addEventListener('click', () => {
+    checked = {};
+    save(SK, checked);
+    overlay.classList.remove('show');
+    render();
+  });
+
+  buildFilters();
+  render();
+})();
+</script>
+</html>
